@@ -44,7 +44,9 @@ def main():
             recorder.process(audio)
 
             if recorder.finished:
-                command_path = save_audio(recorder.get_audio())
+                command_path = save_audio(
+                    recorder.get_audio()
+                )
                 state = "finished"
                 finished.set()
 
@@ -52,7 +54,10 @@ def main():
         print("Waiting for wake word...")
         finished.wait()
 
-    user = identify_speaker(command_path)
+    user = identify_speaker(
+        recorder.get_audio()
+    )
+
     text = transcribe(command_path)
 
     print("User:", user)

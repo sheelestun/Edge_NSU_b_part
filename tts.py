@@ -1,36 +1,26 @@
 from pathlib import Path
-import subprocess
-import tempfile
+import io
+import wave
+
+from piper import PiperVoice
+
+
+import config as cfg
 
 BASE_DIR = Path(__file__).resolve().parent
 
 PIPER_MODEL = BASE_DIR / "ru_RU-dmitri-medium.onnx"
-PIPER_CONFIG = BASE_DIR / "ru_RU-dmitri-medium.onnx.json"
+
+voice = PiperVoice.load(str(PIPER_MODEL))
+
 
 def synthesize(text):
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp:
-        output_path = Path(temp.name)
+    output = io.BytesIO()
 
-    try:
-        result = subprocess.run(
-            [
-                "piper",
-                "-m",
-                str(PIPER_MODEL),
-                "-c",
-                str(PIPER_CONFIG),
-                "-f",
-                str(output_path),
-            ],
-            input=text,
-            capture_output=True,
-            text=True,
-        )
+    with wave.open(output, "wb") as wav:
+        wav.setnchannels(cfg.CHANNELS)
+        wav.setsampwidth(2)
+        wav.setframerate(cfg.SAMPLE_RATE)
+        voice.synthesize(text, wav)
 
-        if result.returncode != 0:
-            raise RuntimeError(result.stderr.decode(errors="ignore"))
-
-        return output_path.read_bytes()
-
-    finally:
-        output_path.unlink(missing_ok=True)
+    return output.getvalue()

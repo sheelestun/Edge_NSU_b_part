@@ -12,15 +12,21 @@ warnings.filterwarnings(
 
 import torch
 import wespeaker
+
 import paths as ph
 import config as cfg
+
 
 with contextlib.redirect_stdout(io.StringIO()):
     model = wespeaker.load_model("english")
 
 
-def get_embedding(audio_path):
-    return model.extract_embedding(audio_path)
+def get_embedding(audio):
+    pcm = torch.from_numpy(audio).unsqueeze(0)
+    return model.extract_embedding_from_pcm(
+        pcm,
+        cfg.SAMPLE_RATE
+    )
 
 
 def compare_embeddings(emb1, emb2):
@@ -30,25 +36,38 @@ def compare_embeddings(emb1, emb2):
     ).item()
 
 
-def identify_speaker(audio_path):
-    audio_embedding = get_embedding(audio_path)
-
-    best_user = None
-    best_score = -1
+def load_reference_embeddings():
+    references = {}
 
     for user_dir in ph.REFERENCE_DIR.iterdir():
         if not user_dir.is_dir():
             continue
 
-        reference_files = list(user_dir.glob("*.wav"))
+        embeddings = []
 
-        if not reference_files:
-            continue
+        for reference_file in user_dir.glob("*.wav"):
+            embedding = model.extract_embedding(str(reference_file))
+            embeddings.append(embedding)
 
+        if embeddings:
+            references[user_dir.name] = embeddings
+
+    return references
+
+
+REFERENCE_EMBEDDINGS = load_reference_embeddings()
+
+
+def identify_speaker(audio):
+    audio_embedding = get_embedding(audio)
+
+    best_user = None
+    best_score = -1
+
+    for user_name, embeddings in REFERENCE_EMBEDDINGS.items():
         user_best_score = -1
 
-        for reference_file in reference_files:
-            reference_embedding = get_embedding(reference_file)
+        for reference_embedding in embeddings:
             similarity = compare_embeddings(
                 audio_embedding,
                 reference_embedding
@@ -59,7 +78,7 @@ def identify_speaker(audio_path):
 
         if user_best_score > best_score:
             best_score = user_best_score
-            best_user = user_dir.name
+            best_user = user_name
 
     if best_score < cfg.SPEAKER_THRESHOLD:
         return {

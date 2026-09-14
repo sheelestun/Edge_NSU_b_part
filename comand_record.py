@@ -1,10 +1,8 @@
 import numpy as np
-
 import config as cfg
 
 
 class CommandRecorder:
-
     def __init__(self):
         self.audio_chunks = []
         self.speech_started = False
@@ -19,7 +17,6 @@ class CommandRecorder:
         if volume > cfg.SILENCE_THRESHOLD:
             self.speech_started = True
             self.silence_chunks = 0
-
         elif self.speech_started:
             self.silence_chunks += 1
 
