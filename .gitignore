@@ -8,6 +8,5 @@ ru_RU-dmitri-medium.onnx.json
 test.wav
 command.wav
 *_test.py
-audio.py
 audio_dataset
 paths.py
