@@ -1,3 +1,5 @@
+.vscode
+/whisper.cpp
 __pycache__
 openWakeWord
 wespeaker
