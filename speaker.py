@@ -15,14 +15,6 @@ def compare_embeddings(emb1, emb2):
         emb2.unsqueeze(0)
     ).item()
 
-def compare_with_reference(audio_path, reference_path):
-    emb1, emb2 = get_embedding(audio_path), get_embedding(reference_path)
-
-    return compare_embeddings(emb1, emb2)
-
-def is_same_speaker(audio_path, reference_path):
-    similarity = compare_with_reference(audio_path, reference_path)
-    return similarity >= cfg.SPEAKER_THRESHOLD
 
 def identify_speaker(audio_path):
     audio_embedding = get_embedding(audio_path)
