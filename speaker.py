@@ -1,17 +1,31 @@
-import wespeaker
-import torch
+import os
+import contextlib
+import io
+import warnings
 
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+
+warnings.filterwarnings(
+    "ignore",
+    message="torchaudio._backend.set_audio_backend has been deprecated"
+)
+
+import torch
+import wespeaker
 import paths as ph
 import config as cfg
 
-model = wespeaker.load_model("english")
+with contextlib.redirect_stdout(io.StringIO()):
+    model = wespeaker.load_model("english")
+
 
 def get_embedding(audio_path):
     return model.extract_embedding(audio_path)
 
+
 def compare_embeddings(emb1, emb2):
     return torch.nn.functional.cosine_similarity(
-        emb1.unsqueeze(0), 
+        emb1.unsqueeze(0),
         emb2.unsqueeze(0)
     ).item()
 
@@ -34,7 +48,6 @@ def identify_speaker(audio_path):
         user_best_score = -1
 
         for reference_file in reference_files:
-
             reference_embedding = get_embedding(reference_file)
             similarity = compare_embeddings(
                 audio_embedding,
@@ -59,4 +72,4 @@ def identify_speaker(audio_path):
         "user_id": best_user,
         "user_name": best_user,
         "confidence": best_score
-    } 
+    }
