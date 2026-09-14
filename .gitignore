@@ -1,0 +1,9 @@
+__pycache__
+openWakeWord
+wespeaker
+ru_RU-dmitri-medium.onnx
+ru_RU-dmitri-medium.onnx.json
+test.wav
+command.wav
+*_test.py
+audio.py
