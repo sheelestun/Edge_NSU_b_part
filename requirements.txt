@@ -1,0 +1,9 @@
+numpy
+sounddevice
+soundfile
+openwakeword
+wespeaker
+torch
+torchaudio
+piper-tts
+pywhispercpp
