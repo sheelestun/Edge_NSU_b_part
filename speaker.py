@@ -11,6 +11,30 @@ warnings.filterwarnings(
 )
 
 import torch
+
+import torchaudio
+# s3prl (pulled in by wespeaker) calls set_audio_backend at import time;
+# removed in newer torchaudio, and a no-op there anyway.
+if not hasattr(torchaudio, "set_audio_backend"):
+    torchaudio.set_audio_backend = lambda *a, **k: None
+import sys
+import types
+
+# wespeaker imports its s3prl frontend at import time, even though the pretrained
+# models we use never touch it. s3prl can't import with modern torchaudio
+# (sox_effects, set_audio_backend were removed), so stub it out.
+if "s3prl" not in sys.modules:
+    class _S3prlUnavailable:
+        def __init__(self, *args, **kwargs):
+            raise ImportError("s3prl is stubbed out in speaker.py")
+
+    _s3prl = types.ModuleType("s3prl")
+    _s3prl_nn = types.ModuleType("s3prl.nn")
+    _s3prl_nn.Featurizer = _s3prl_nn.S3PRLUpstream = _S3prlUnavailable
+    _s3prl.nn = _s3prl_nn
+    sys.modules["s3prl"] = _s3prl
+    sys.modules["s3prl.nn"] = _s3prl_nn
+
 import wespeaker
 
 import paths as ph
