@@ -10,3 +10,5 @@ command.wav
 *_test.py
 audio_dataset
 paths.py
+*.onnx
+
