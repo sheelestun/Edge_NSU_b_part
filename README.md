@@ -60,7 +60,7 @@ edge_project/
 ├── ru_RU-dmitri-medium.onnx
 ├── ru_RU-dmitri-medium.onnx.json
 └── whisper.cpp/
-    └── ggml-base.bin
+    └── ggml-small.bin
 ```
 
 ## Требования
@@ -159,7 +159,7 @@ cmake --build build --config Release
 Модель Whisper должна находиться в:
 
 ```text
-whisper.cpp/ggml-base.bin
+whisper.cpp/ggml-small.bin
 ```
 
 Подробнее о моделях и сборке:

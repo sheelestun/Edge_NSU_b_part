@@ -7,7 +7,7 @@ from pywhispercpp.model import Model
 
 BASE_DIR = Path(__file__).resolve().parent
 
-WHISPER_MODEL = BASE_DIR / "whisper.cpp" / "ggml-base.bin"
+WHISPER_MODEL = BASE_DIR / "whisper.cpp" / "ggml-small.bin"
 
 
 def load_model():
