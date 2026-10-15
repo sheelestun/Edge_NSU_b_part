@@ -1,6 +1,7 @@
 import os
 import contextlib
 import io
+import logging
 import warnings
 
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
@@ -40,6 +41,8 @@ import wespeaker
 import paths as ph
 import config as cfg
 
+log = logging.getLogger(__name__)
+
 
 with contextlib.redirect_stdout(io.StringIO()):
     model = wespeaker.load_model("english")
@@ -60,21 +63,44 @@ def compare_embeddings(emb1, emb2):
     ).item()
 
 
+EMBEDDINGS_DIR = ph.REFERENCE_DIR / "embeddings"
+
+
 def load_reference_embeddings():
     references = {}
 
+    # Precomputed: embeddings/<user_id>/*.pt
+    if EMBEDDINGS_DIR.is_dir():
+        for user_dir in EMBEDDINGS_DIR.iterdir():
+            if not user_dir.is_dir():
+                continue
+
+            embeddings = [
+                torch.load(f, map_location="cpu")
+                for f in sorted(user_dir.glob("*.pt"))
+            ]
+
+            if embeddings:
+                references[user_dir.name] = embeddings
+                log.info("speaker %r: %d precomputed embeddings", user_dir.name, len(embeddings))
+
+    # Fallback: <user_id>/*.wav, only for users without precomputed embeddings
     for user_dir in ph.REFERENCE_DIR.iterdir():
-        if not user_dir.is_dir():
+        if (
+            not user_dir.is_dir()
+            or user_dir == EMBEDDINGS_DIR
+            or user_dir.name in references
+        ):
             continue
 
-        embeddings = []
+        wav_files = sorted(user_dir.glob("*.wav"))
+        if not wav_files:
+            continue
 
-        for reference_file in user_dir.glob("*.wav"):
-            embedding = model.extract_embedding(str(reference_file))
-            embeddings.append(embedding)
-
-        if embeddings:
-            references[user_dir.name] = embeddings
+        log.info("speaker %r: computing embeddings from %d wav files (slow)", user_dir.name, len(wav_files))
+        references[user_dir.name] = [
+            model.extract_embedding(str(f)) for f in wav_files
+        ]
 
     return references
 
